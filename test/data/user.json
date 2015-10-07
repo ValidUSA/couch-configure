@@ -1,0 +1,28 @@
+{
+    "_id": "org.couchdb.user:test1",
+    "_rev": "99-99999",
+    "password_scheme": "pbkdf2",
+    "iterations": 10,
+    "name": "test1",
+    "roles": [
+        "weblink-test-fail",
+        "weblink-view-workflow",
+        "weblink-view-workflows",
+        "weblink-view-form-designs",
+        "weblink-edit-form-designs",
+        "weblink-view-person",
+        "weblink-view-wadol-schema",
+        "weblink-edit-workflows",
+        "weblink-view-card-designs",
+        "weblink-edit-card-designs",
+        "couchdb-users-edit"
+    ],
+    "type": "user",
+    "derived_key": "dbbda42f10331eab432848477e6102b7ab653b2e",
+    "salt": "bda76db7189cd12d5e6581b0d67fec3b",
+    "weblink_roles": [
+        "TEST123",
+        "TEST14",
+        "WebLinkAdmin"
+    ]
+}

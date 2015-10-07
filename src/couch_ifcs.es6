@@ -1,5 +1,4 @@
 import nano from "nano";
-import prom from "nano-promises";
 
 let logger = require("winston"),
     _ = require("lodash");
