@@ -1,0 +1,11 @@
+node_modules
+build/*
+couchrc.json
+results.txt
+dest
+pid
+*.swp
+*-compiled.js
+*.map
+*.bak
+*.log
