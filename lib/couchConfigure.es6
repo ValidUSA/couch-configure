@@ -3,7 +3,7 @@ import nano from "nano";
 let logger = require("winston"),
     _ = require("lodash");
 
-export default class Nano {
+export default class couchConfigure {
     constructor () {}
     initialize (couchURL, database, user, pass) {
         logger.info("Initialized called!");
