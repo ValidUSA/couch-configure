@@ -25,17 +25,17 @@ module.exports = function (grunt) {
         jshint: {
             options: {
                 jshintrc: ".jshintrc",
-                ignores: ["src/**/*-compiled.js"]
+                ignores: ["lib/**/*-compiled.js"]
             },
             files: {
-                src: ["Gruntfile.js", "src/**/*.js", "src/**/*.es6", "test/**/*.js"]
+                src: ["Gruntfile.js", "lib/**/*.js", "lib/**/*.es6", "test/**/*.js"]
             }
         },
         jscs: {
-            src: ["Gruntfile.js", "src/**/*.js", "src/**/*.es6", "test/*.js"],
+            src: ["Gruntfile.js", "lib/**/*.js", "lib/**/*.es6", "test/*.js"],
             options: {
                 config: ".jscsrc",
-                excludeFiles: ["src/**/*-compiled.js"]
+                excludeFiles: ["lib/**/*-compiled.js"]
             }
         },
         // Configure a mochaTest task
@@ -58,7 +58,7 @@ module.exports = function (grunt) {
                 files: [
                     {
                         expand: true,
-                        cwd: "src/",
+                        cwd: "lib/",
                         src: ["**", "!config/**"], // exclude scss folder and contents of js folder
                         dest: "build/"
                     }
@@ -66,7 +66,7 @@ module.exports = function (grunt) {
             }
         }
     });
-
+    grunt.registerTask("compile", ["babel"]);
     grunt.registerTask("default", [
         "babel",
         "jshint",
@@ -74,10 +74,6 @@ module.exports = function (grunt) {
         "clean",
         "copy",
         "strip_code"
-    ]);
-
-    grunt.registerTask("full", [
-        "default"
     ]);
 
     grunt.registerTask("quick", [

@@ -9,7 +9,7 @@
 var chai = require("chai"),
     expect = chai.expect,
     should = chai.should(),
-    Nano = require("../build/couch_ifcs-compiled.js"),
+    Nano = require("../build/couch-configure-compiled.js"),
     couchdb = new Nano(),
     nock = require("nock");
 

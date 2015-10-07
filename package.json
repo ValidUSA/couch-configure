@@ -2,18 +2,21 @@
   "name": "couch-configure",
   "version": "0.0.1",
   "description": "A simple wrapper for Nano to configure couchdb",
-  "main": "index.js",
+  "main": "lib/couch-configure-compiled.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "grunt test",
+    "prepublish": "grunt compile"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/ValidUSA/couch-configure.git"
   },
   "keywords": [
-    "Nano"
+    "couchdb",
+    "promise",
+    "nano"
   ],
-  "author": "Valid USA <mcrummey@validusa.com> (www.validusa.com)",
+  "author": "Valid USA <mcrummey@validusa.com> (http://www.validusa.com)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/ValidUSA/couch-configure/issues"
