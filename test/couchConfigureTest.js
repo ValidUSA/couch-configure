@@ -9,8 +9,8 @@
 var chai = require("chai"),
     expect = chai.expect,
     should = chai.should(),
-    Nano = require("../build/couch-configure-compiled.js"),
-    couchdb = new Nano(),
+    Couch = require("../lib/couchConfigure.js"),
+    couchdb = new Couch(),
     nock = require("nock");
 
 describe("The nano library ", function () {

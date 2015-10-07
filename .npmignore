@@ -1,6 +1,5 @@
+src/
 node_modules
-build/*
-lib/*
 couchrc.json
 results.txt
 dest

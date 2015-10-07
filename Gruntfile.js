@@ -4,8 +4,6 @@ module.exports = function (grunt) {
 
     grunt.loadNpmTasks("grunt-babel");
     grunt.loadNpmTasks("grunt-contrib-jshint");
-    grunt.loadNpmTasks("grunt-contrib-copy");
-    grunt.loadNpmTasks("grunt-contrib-clean");
     grunt.loadNpmTasks("grunt-jscs");
     grunt.loadNpmTasks("grunt-mocha-test");
 
@@ -15,27 +13,25 @@ module.exports = function (grunt) {
                 sourceMap: true,
                 stage: 0
             },
-            files: {
-                expand: true,
-                src: ["**/*.es6"],
-                ext: "-compiled.js"
+            dist: {
+                files: {
+                    "lib/couchConfigure.js": "src/couchConfigure.es6"
+                }
             }
         },
         pkg: grunt.file.readJSON("package.json"),
         jshint: {
             options: {
-                jshintrc: ".jshintrc",
-                ignores: ["lib/**/*-compiled.js"]
+                jshintrc: ".jshintrc"
             },
             files: {
-                src: ["Gruntfile.js", "lib/**/*.js", "lib/**/*.es6", "test/**/*.js"]
+                src: ["Gruntfile.js", "src/**/*.js", "src/**/*.es6", "test/**/*.js"]
             }
         },
         jscs: {
-            src: ["Gruntfile.js", "lib/**/*.js", "lib/**/*.es6", "test/*.js"],
+            src: ["Gruntfile.js", "src/**/*.js", "src/**/*.es6", "test/*.js"],
             options: {
-                config: ".jscsrc",
-                excludeFiles: ["lib/**/*-compiled.js"]
+                config: ".jscsrc"
             }
         },
         // Configure a mochaTest task
@@ -49,21 +45,6 @@ module.exports = function (grunt) {
                 },
                 src: ["test/**/*.js"]
             }
-        },
-        clean: {
-            build: ["build"]
-        },
-        copy: {
-            build: {
-                files: [
-                    {
-                        expand: true,
-                        cwd: "lib/",
-                        src: ["**", "!config/**"], // exclude scss folder and contents of js folder
-                        dest: "build/"
-                    }
-                ]
-            }
         }
     });
     grunt.registerTask("compile", ["babel"]);
@@ -71,25 +52,19 @@ module.exports = function (grunt) {
         "babel",
         "jshint",
         "jscs",
-        "clean",
-        "copy",
         "strip_code"
     ]);
 
     grunt.registerTask("quick", [
         "babel",
         "jshint",
-        "jscs",
-        "clean",
-        "copy"
+        "jscs"
     ]);
 
     grunt.registerTask("test", [
         "babel",
         "jshint",
         "jscs",
-        "clean",
-        "copy",
         "mochaTest"
     ]);
 };
