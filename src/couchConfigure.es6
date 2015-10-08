@@ -4,7 +4,15 @@ let logger = require("winston"),
     _ = require("lodash");
 
 export default class couchConfigure {
-    constructor () {}
+    constructor () {
+        logger.level = "warn";
+    }
+    setLogLevel (level) {
+        logger.level = level;
+    }
+    getLogLevel (level) {
+        return logger.level;
+    }
     initialize (couchURL, database, user, pass) {
         logger.info("Initialized called!");
         let self = this;
@@ -42,7 +50,6 @@ export default class couchConfigure {
                     logger.info("Got a body " + JSON.stringify(body));
                     resolve(body);
                 }
-                reject("unknown error");
             });
         });
     }
@@ -64,7 +71,6 @@ export default class couchConfigure {
                     logger.silly("Fetch return body " + JSON.stringify(body));
                     resolve(body);
                 }
-                reject("unknown error");
             });
         });
     }
@@ -82,7 +88,6 @@ export default class couchConfigure {
                     logger.silly("Got Headers: " + JSON.stringify(headers));
                     resolve(headers);
                 }
-                reject("unknown error");
             });
         });
     }
@@ -100,7 +105,6 @@ export default class couchConfigure {
                     logger.silly("Got Body" + JSON.stringify(body));
                     resolve(body);
                 }
-                reject("unknown error");
             });
         });
     }
@@ -119,7 +123,6 @@ export default class couchConfigure {
                     logger.info("Got Body" + JSON.stringify(body));
                     resolve(body);
                 }
-                reject("unknown error");
             });
         });
     }
@@ -148,7 +151,6 @@ export default class couchConfigure {
                         logger.info("Got Body" + JSON.stringify(body));
                         resolve(body);
                     }
-                    reject("unknown error");
                 });
             });
         });
@@ -181,7 +183,6 @@ export default class couchConfigure {
                         logger.info("Got Body" + JSON.stringify(body));
                         resolve(body);
                     }
-                    reject("unknown error");
                 });
             });
         });
@@ -212,8 +213,6 @@ export default class couchConfigure {
                 logger.error("Replace error: " + reason);
                 reject(reason);
             });
-
-            reject("unknown error");
         });
     }
     // Here we pass in an array of documents, it should work for create and update
@@ -234,7 +233,6 @@ export default class couchConfigure {
                     logger.silly("Got bulk body response" + JSON.stringify(body));
                     resolve(body);
                 }
-                reject("unknown error");
             });
         });
     }
@@ -272,7 +270,6 @@ export default class couchConfigure {
                     });
                     resolve(ids);
                 }
-                reject("unknown error");
             });
         });
     }
