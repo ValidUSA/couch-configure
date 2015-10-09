@@ -15,7 +15,7 @@ module.exports = function (grunt) {
             },
             dist: {
                 files: {
-                    "lib/couchConfigure.js": "src/couchConfigure.es6"
+                    "lib/couchConfigure.js": "src/couchConfigure.js"
                 }
             }
         },
@@ -25,11 +25,11 @@ module.exports = function (grunt) {
                 jshintrc: ".jshintrc"
             },
             files: {
-                src: ["Gruntfile.js", "src/**/*.js", "src/**/*.es6", "test/**/*.js"]
+                src: ["Gruntfile.js", "src/**/*.js", "test/**/*.js"]
             }
         },
         jscs: {
-            src: ["Gruntfile.js", "src/**/*.js", "src/**/*.es6", "test/*.js"],
+            src: ["Gruntfile.js", "src/**/*.js", "test/*.js"],
             options: {
                 config: ".jscsrc"
             }
