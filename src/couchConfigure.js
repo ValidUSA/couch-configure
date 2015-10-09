@@ -39,14 +39,14 @@ export default class couchConfigure {
             if (!this.db) {
                 reject("No database configured.  Please Run initialize " + this.db);
             }
-            logger.info("DB Get called with " + key);
-            this.db.get(key, (err, body, header)=> {
+            logger.debug("DB Get called with " + key);
+            this.db.get(key, (err, body)=> {
                 if (err) {
                     reject(err);
                 }
                 if (body) {
-                    logger.info("Got a body " + JSON.stringify(body));
-                    resolve([body, header]);
+                    logger.debug("Got a body " + JSON.stringify(body));
+                    resolve(body);
                 }
             });
         });
@@ -57,16 +57,16 @@ export default class couchConfigure {
             if (!this.db) {
                 reject("No database configured.  Please Run initialize " + this.db);
             }
-            logger.info("DB Fetch called with " + JSON.stringify(keys));
+            logger.debug("DB Fetch called with " + JSON.stringify(keys));
             this.db.fetch({
                 keys: keys
-            }, (err, body, header)=> {
+            }, (err, body)=> {
                 if (err) {
                     reject(err);
                 }
                 if (body) {
-                    logger.silly("Fetch return body " + JSON.stringify(body));
-                    resolve([body, header]);
+                    logger.debug("Fetch return body " + JSON.stringify(body));
+                    resolve(body);
                 }
             });
         });
@@ -81,7 +81,7 @@ export default class couchConfigure {
                     reject(err);
                 }
                 if (headers) {
-                    logger.silly("Got Headers: " + JSON.stringify(headers));
+                    logger.debug("Got Headers: " + JSON.stringify(headers));
                     resolve(headers);
                 }
             });
@@ -92,13 +92,13 @@ export default class couchConfigure {
             if (!this.db) {
                 reject("No database configured.  Please Run initialize " + this.db);
             }
-            this.db.insert(doc, key, (err, body, header)=> {
+            this.db.insert(doc, key, (err, body)=> {
                 if (err) {
                     reject(err);
                 }
                 if (body) {
-                    logger.silly("Got Body" + JSON.stringify(body));
-                    resolve([body, header]);
+                    logger.debug("Got Body" + JSON.stringify(body));
+                    resolve(body);
                 }
             });
         });
@@ -108,14 +108,14 @@ export default class couchConfigure {
             if (!this.db) {
                 reject("No database configured.  Please Run initialize " + this.db);
             }
-            logger.info("Sending PUT request" + JSON.stringify(doc));
-            this.db.insert(doc, (err, body, header)=> {
+            logger.debug("Sending PUT request" + JSON.stringify(doc));
+            this.db.insert(doc, (err, body)=> {
                 if (err) {
                     reject(err);
                 }
                 if (body) {
-                    logger.info("Got Body" + JSON.stringify(body));
-                    resolve([body, header]);
+                    logger.debug("Got Body" + JSON.stringify(body));
+                    resolve(body);
                 }
             });
         });
@@ -128,20 +128,20 @@ export default class couchConfigure {
             if (!(newDoc && newDoc._id)) {
                 reject("Merge: Document and Key cannot be undefined");
             }
-            this.db.get(newDoc._id, (err, body, header)=> {
+            this.db.get(newDoc._id, (err, body)=> {
                 if (err) {
                     reject("merge error: " + err);
                 }
-                logger.info("Go existing data " + JSON.stringify(body));
+                logger.debug("Got existing data " + JSON.stringify(body));
                 let doc = _.assign(body, newDoc);
-                logger.info("Merged doc: " + JSON.stringify(doc));
-                this.db.insert(doc, (err, body, header)=> {
+                logger.debug("Merged doc: " + JSON.stringify(doc));
+                this.db.insert(doc, (err, body)=> {
                     if (err) {
                         reject(err);
                     }
                     if (body) {
-                        logger.info("Got Body" + JSON.stringify(body));
-                        resolve([body, header]);
+                        logger.debug("Got Body" + JSON.stringify(body));
+                        resolve(body);
                     }
                 });
             });
@@ -155,23 +155,23 @@ export default class couchConfigure {
             if (!key) {
                 reject("Delete: Key cannot be undefined");
             }
-            logger.info("Doc Key " + key);
-            this.db.get(key, (err, body, header)=> {
+            logger.debug("Doc Key " + key);
+            this.db.get(key, (err, body)=> {
                 if (err) {
                     reject("Delete error: " + err);
                 }
-                logger.info("Found Doc " + JSON.stringify(body));
+                logger.debug("Found Doc " + JSON.stringify(body));
                 let doc = _.assign(body, {
                     _deleted: true
                 });
-                logger.info("Deleted doc: " + JSON.stringify(doc));
-                this.db.insert(doc, (err, body, header)=> {
+                logger.debug("Deleted doc: " + JSON.stringify(doc));
+                this.db.insert(doc, (err, body)=> {
                     if (err) {
                         reject(err);
                     }
                     if (body) {
-                        logger.info("Got Body" + JSON.stringify(body));
-                        resolve([body, header]);
+                        logger.debug("Got Body" + JSON.stringify(body));
+                        resolve(body);
                     }
                 });
             });
@@ -186,17 +186,17 @@ export default class couchConfigure {
                 reject("Delete: Document and Key cannot be undefined");
             }
             let key = doc._id;
-            logger.info("Doc Key " + key);
-            this.head(key).then((body)=> {
-                logger.info("Head Response: " + JSON.stringify(body));
-                doc._rev = body.etag.replace(/"/g, "");
+            logger.debug("Doc Key " + key);
+            this.head(key).then((header)=> {
+                logger.debug("Head Response: " + JSON.stringify(header));
+                doc._rev = header.etag.replace(/"/g, "");
                 return this.update(doc);
             }, (reason)=> {
-                logger.info("Error Heading: " + reason);
+                logger.debug("Error Heading: " + reason);
                 return this.update(doc);
-            }).then((body, header)=> {
-                logger.info("Replace: " + JSON.stringify(body));
-                resolve([body, header]);
+            }).then((body)=> {
+                logger.debug("Replace: " + JSON.stringify(body));
+                resolve(body);
             }).catch ((reason)=> {
                 logger.error("Replace error: " + reason);
                 reject(reason);
@@ -209,16 +209,16 @@ export default class couchConfigure {
             if (!this.db) {
                 reject("No database configured.  Please Run initialize " + this.db);
             }
-            logger.silly("this.db.bulk sending: \n" + JSON.stringify(docs));
+            logger.debug("this.db.bulk sending: \n" + JSON.stringify(docs));
             this.db.bulk({
                 docs: docs
-            }, (err, body, header)=> {
+            }, (err, body)=> {
                 if (err) {
                     reject(err);
                 }
                 if (body) {
-                    logger.silly("Got bulk body response" + JSON.stringify(body));
-                    resolve([body, header]);
+                    logger.debug("Got bulk body response" + JSON.stringify(body));
+                    resolve(body);
                 }
             });
         });
@@ -229,9 +229,9 @@ export default class couchConfigure {
                 reject("No database configured.  Please Run initialize " + this.db);
             }
             this.db.insert(securityDoc, "_security").then((body)=> {
-                logger.info(JSON.stringify(body));
+                logger.debug(JSON.stringify(body));
             }).catch((reason)=> {
-                logger.info(reason);
+                logger.debug(reason);
             });
         });
     }
@@ -243,12 +243,12 @@ export default class couchConfigure {
             }
             this.db.view(designName, viewName, {
                 keys: keys
-            }, (err, body, header)=> {
+            }, (err, body)=> {
                 if (err) {
                     reject(err);
                 }
                 if (body) {
-                    logger.silly("View Body" + JSON.stringify(body) + "\n db" + JSON.stringify(this.db));
+                    logger.debug("View Body" + JSON.stringify(body) + "\n db" + JSON.stringify(this.db));
                     let ids = [];
                     body.rows.forEach((viewRow)=> {
                         ids.push(viewRow.id);

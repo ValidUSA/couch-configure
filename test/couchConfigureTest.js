@@ -20,9 +20,9 @@ describe("The nano library ", function () {
     });
 
     it("methods should return rejected promises if it is not initialized ", function (done) {
-        couchdb.get("12345").then(function (response) {
+        couchdb.get("12345").then(function (body) {
             // array 0 is body
-            done(response[0]);
+            done(body);
         }, function (reason) {
             reason.should.be.a.string();
             done();
@@ -32,16 +32,15 @@ describe("The nano library ", function () {
         // Here we are mocking a couch authentication
         nock("http://test/")
         .post("/_session")
-            .reply(200, {
-                ok: true,
-                name: "tester",
-                roles: ["nock", "is", "cool"]
-            }, {
-                // Third argument is the response header
-                "set-cookie": "Yummo"
-            });
+        .reply(200, {
+            ok: true,
+            name: "tester",
+            roles: ["nock", "is", "cool"]
+        }, {
+            // Third argument is the response header
+            "set-cookie": "Yummo"
+        });
         couchdb.initialize("http://test", "test", "tester", "pass").then(function (response) {
-            console.log("Login Response " + JSON.stringify(response[0]));
             nock("http://test/")
             .get("/test/9")
             .reply(200, {
@@ -59,8 +58,46 @@ describe("The nano library ", function () {
             return couchdb.merge({
                 _id: "9", testKey1: "updatedVal", testKey3: "newVal"
             });
-        }).then(function (response) {
-            response[0].ok.should.equal(true);
+        }).then(function (body) {
+            body.ok.should.equal(true);
+            done();
+        }).catch(function (reason) {
+            done(reason);
+            console.log(reason + "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        });
+    });
+    it("replace should get the right rev", function (done) {
+        // Here we are mocking a couch authentication
+        nock("http://test/")
+        .post("/_session")
+        .reply(200, {
+            ok: true,
+            name: "tester",
+            roles: ["nock", "is", "cool"]
+        }, {
+            // Third argument is the response header
+            "set-cookie": "Yummo"
+        });
+        couchdb.initialize("http://test", "test", "tester", "pass").then(function (response) {
+            console.log("Login Response " + JSON.stringify(response));
+            nock("http://test/")
+            .head("/test/9")
+            .reply(200, {}, {
+                etag: "99-ce54ca73ee9cfaec22610765aa6f04d5"
+            });
+            nock("http://test/")
+            .post("/test", {
+                _id: "9", testKey1: "updatedVal", testKey3: "newVal", _rev: "99-ce54ca73ee9cfaec22610765aa6f04d5"
+            })
+            .reply(200, {
+                ok: true
+            });
+
+            return couchdb.replace({
+                _id: "9", testKey1: "updatedVal", testKey3: "newVal"
+            });
+        }).then(function (body) {
+            body.ok.should.equal(true);
             done();
         }).catch(function (reason) {
             done(reason);

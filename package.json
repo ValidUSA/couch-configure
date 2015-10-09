@@ -1,6 +1,6 @@
 {
   "name": "couch-configure",
-  "version": "0.0.7",
+  "version": "0.0.10",
   "description": "A simple wrapper for Nano to configure couchdb",
   "main": "lib/couchConfigure.js",
   "scripts": {
