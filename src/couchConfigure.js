@@ -28,7 +28,7 @@ export default class couchConfigure {
                             url : couchURL + "/" + database, cookie: this.auth
                         });
                     }
-                    resolve("it worked " + JSON.stringify(body));
+                    resolve([body, headers]);
                 });
             }
         );
@@ -46,7 +46,7 @@ export default class couchConfigure {
                 }
                 if (body) {
                     logger.info("Got a body " + JSON.stringify(body));
-                    resolve(body);
+                    resolve([body, header]);
                 }
             });
         });
@@ -66,7 +66,7 @@ export default class couchConfigure {
                 }
                 if (body) {
                     logger.silly("Fetch return body " + JSON.stringify(body));
-                    resolve(body);
+                    resolve([body, header]);
                 }
             });
         });
@@ -98,7 +98,7 @@ export default class couchConfigure {
                 }
                 if (body) {
                     logger.silly("Got Body" + JSON.stringify(body));
-                    resolve(body);
+                    resolve([body, header]);
                 }
             });
         });
@@ -115,7 +115,7 @@ export default class couchConfigure {
                 }
                 if (body) {
                     logger.info("Got Body" + JSON.stringify(body));
-                    resolve(body);
+                    resolve([body, header]);
                 }
             });
         });
@@ -135,13 +135,13 @@ export default class couchConfigure {
                 logger.info("Go existing data " + JSON.stringify(body));
                 let doc = _.assign(body, newDoc);
                 logger.info("Merged doc: " + JSON.stringify(doc));
-                this.db.insert(doc, (err, body)=> {
+                this.db.insert(doc, (err, body, header)=> {
                     if (err) {
                         reject(err);
                     }
                     if (body) {
                         logger.info("Got Body" + JSON.stringify(body));
-                        resolve(body);
+                        resolve([body, header]);
                     }
                 });
             });
@@ -171,7 +171,7 @@ export default class couchConfigure {
                     }
                     if (body) {
                         logger.info("Got Body" + JSON.stringify(body));
-                        resolve(body);
+                        resolve([body, header]);
                     }
                 });
             });
@@ -194,9 +194,9 @@ export default class couchConfigure {
             }, (reason)=> {
                 logger.info("Error Heading: " + reason);
                 return this.update(doc);
-            }).then((body)=> {
+            }).then((body, header)=> {
                 logger.info("Replace: " + JSON.stringify(body));
-                resolve(body);
+                resolve([body, header]);
             }).catch ((reason)=> {
                 logger.error("Replace error: " + reason);
                 reject(reason);
@@ -218,7 +218,7 @@ export default class couchConfigure {
                 }
                 if (body) {
                     logger.silly("Got bulk body response" + JSON.stringify(body));
-                    resolve(body);
+                    resolve([body, header]);
                 }
             });
         });

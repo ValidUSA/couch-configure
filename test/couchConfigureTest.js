@@ -20,8 +20,9 @@ describe("The nano library ", function () {
     });
 
     it("methods should return rejected promises if it is not initialized ", function (done) {
-        couchdb.get("12345").then(function (body) {
-            done(body);
+        couchdb.get("12345").then(function (response) {
+            // array 0 is body
+            done(response[0]);
         }, function (reason) {
             reason.should.be.a.string();
             done();
@@ -39,8 +40,8 @@ describe("The nano library ", function () {
                 // Third argument is the response header
                 "set-cookie": "Yummo"
             });
-        couchdb.initialize("http://test", "test", "tester", "pass").then(function (body) {
-            console.log("Login Response " + JSON.stringify(body));
+        couchdb.initialize("http://test", "test", "tester", "pass").then(function (response) {
+            console.log("Login Response " + JSON.stringify(response[0]));
             nock("http://test/")
             .get("/test/9")
             .reply(200, {
@@ -58,8 +59,8 @@ describe("The nano library ", function () {
             return couchdb.merge({
                 _id: "9", testKey1: "updatedVal", testKey3: "newVal"
             });
-        }).then(function (body) {
-            body.ok.should.equal(true);
+        }).then(function (response) {
+            response[0].ok.should.equal(true);
             done();
         }).catch(function (reason) {
             done(reason);
