@@ -266,4 +266,36 @@ export default class couchConfigure {
             });
         });
     }
+    request (opts, couchUrl) {
+        return new Promise((resolve, reject)=> {
+            if (this.nano) {
+                this.nano.request (opts, (err, body)=> {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(body);
+                    }
+                });
+            } else {
+                nano(couchUrl).request (opts, (err, body)=> {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(body);
+                    }
+                });
+            }
+        });
+    }
+
+    addAdmin (couchUrl, user, pass) {
+        let opts = {
+                db: "_config",
+                path: "admins/" + user,
+                method: "PUT",
+                headers: "Content-Type: application/json",
+                body: pass
+            };
+        return this.request (opts, couchUrl);
+    }
 }

@@ -105,4 +105,53 @@ describe("The nano library ", function () {
             console.log(reason + "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         });
     });
+    it("addAdmin should create an admin user without authenticating ", function (done) {
+        nock("http://test/")
+        .put("/_config/admins/testadmin")
+            .reply(200, {
+                ok: true
+            });
+        couchdb.addAdmin("http://test", "testadmin", "testPass").then(function (body) {
+            body.ok.should.equal(true);
+            // array 0 is body
+            done();
+        }).catch(function (reason) {
+            done(reason);
+            console.log("Error in addAdmin test " + reason);
+        });
+    });
+
+    it("addAdmin should create an admin user without authenticating ", function (done) {
+        // Here we are mocking a couch authentication
+        nock("http://test/")
+        .post("/_session")
+        .reply(200, {
+            ok: true,
+            name: "tester",
+            roles: ["nock", "is", "cool"]
+        }, {
+            // Third argument is the response header
+            "set-cookie": "Yummo"
+        });
+
+        nock("http://test/", {
+            reqheaders: {
+                Cookie: "Yummo"
+            }
+        })
+        .put("/_config/admins/testadmin")
+            .reply(200, {
+                ok: true
+            });
+        couchdb.initialize("http://test", "tester", "pass", "test").then(function (response) {
+            return couchdb.addAdmin("http://test", "testadmin", "testPass");
+        }).then(function (body) {
+            body.ok.should.equal(true);
+            // array 0 is body
+            done();
+        }).catch(function (reason) {
+            done(reason);
+            console.log("Error in addAdmin test " + reason);
+        });
+    });
 });
