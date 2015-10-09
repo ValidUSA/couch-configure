@@ -13,7 +13,7 @@ export default class couchConfigure {
     getLogLevel (level) {
         return logger.level;
     }
-    initialize (couchURL, database, user, pass) {
+    initialize (couchURL, user, pass, database) {
         logger.info("Initialized called!");
         return new Promise (
             (resolve, reject)=> {
@@ -23,15 +23,23 @@ export default class couchConfigure {
                         reject(err);
                     }
                     if (headers && headers["set-cookie"]) {
-                        this.auth = headers["set-cookie"];
-                        this.db = nano({
-                            url : couchURL + "/" + database, cookie: this.auth
+                        this.authSession = headers["set-cookie"];
+                        this.nano = nano({
+                            url : couchURL,
+                            cookie: this.authSession
                         });
+                        if (database) {
+                            this.db = this.nano.use(database);
+                        }
                     }
                     resolve([body, headers]);
                 });
             }
         );
+    }
+
+    use (database) {
+        this.db = this.nano.use(database);
     }
 
     get (key) {

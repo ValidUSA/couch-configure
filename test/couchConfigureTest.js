@@ -40,7 +40,7 @@ describe("The nano library ", function () {
             // Third argument is the response header
             "set-cookie": "Yummo"
         });
-        couchdb.initialize("http://test", "test", "tester", "pass").then(function (response) {
+        couchdb.initialize("http://test", "tester", "pass", "test").then(function (response) {
             nock("http://test/")
             .get("/test/9")
             .reply(200, {
@@ -78,7 +78,8 @@ describe("The nano library ", function () {
             // Third argument is the response header
             "set-cookie": "Yummo"
         });
-        couchdb.initialize("http://test", "test", "tester", "pass").then(function (response) {
+        couchdb.initialize("http://test", "tester", "pass").then(function (response) {
+            couchdb.use("test");
             console.log("Login Response " + JSON.stringify(response));
             nock("http://test/")
             .head("/test/9")
