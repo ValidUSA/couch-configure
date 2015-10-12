@@ -249,20 +249,11 @@ export default class couchConfigure {
             if (!this.db) {
                 reject("No database configured.  Please Run initialize " + this.db);
             }
-            this.db.view(designName, viewName, {
-                keys: keys
-            }, (err, body)=> {
+            this.db.view(designName, viewName, keys, (err, body)=> {
                 if (err) {
                     reject(err);
                 }
-                if (body) {
-                    logger.debug("View Body" + JSON.stringify(body) + "\n db" + JSON.stringify(this.db));
-                    let ids = [];
-                    body.rows.forEach((viewRow)=> {
-                        ids.push(viewRow.id);
-                    });
-                    resolve(ids);
-                }
+                resolve(body);
             });
         });
     }
