@@ -278,7 +278,20 @@ export default class couchConfigure {
             }
         });
     }
-
+    getAtt (docName, attName, qs) {
+        return new Promise((resolve, reject)=> {
+            if (!this.db) {
+                reject("No database configured.  Please Run initialize " + this.db);
+            }
+            this.db.attachment.get(docName, attName, qs, (err, body)=> {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(body);
+                }
+            });
+        });
+    }
     addAdmin (couchUrl, user, pass) {
         let opts = {
                 db: "_config",
