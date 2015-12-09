@@ -1,6 +1,6 @@
 {
   "name": "couch-configure",
-  "version": "0.0.18",
+  "version": "0.1.0",
   "description": "A simple wrapper for Nano to configure couchdb",
   "main": "lib/couchConfigure.js",
   "scripts": {
@@ -36,6 +36,6 @@
   "dependencies": {
     "lodash": "^3.10.1",
     "nano": "^6.1.5",
-    "winston": "^1.0.2"
+    "winston": "^2.1.1"
   }
 }

@@ -26,6 +26,39 @@ describe("The nano library ", function () {
             done();
         });
     });
+    it("We should update a doc", function (done) {
+        let scope = nock("http://test/")
+            .post("/test")
+            .reply(200, {
+                ok: true
+            })
+            .post("/_session")
+            .reply(200, {
+                ok: true,
+                name: "tester",
+                roles: ["nock", "is", "cool"]
+            }, {
+                // Third argument is the response header
+                "set-cookie": "Yummo"
+            });
+        couchdb.initialize("http://test", "tester", "pass", "test")
+            .then((response) => {
+                return couchdb.update({
+                    _id: "9",
+                    testKey1: "updatedVal",
+                    testKey3: "newVal"
+                });
+            })
+            .then((body) => {
+                body.ok.should.equal(true);
+                scope.done();
+                done();
+            })
+            .catch((reason) => {
+                done(JSON.stringify(reason));
+                console.log(JSON.stringify(reason) + "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            });
+    });
     it("merge should overwrite data", function (done) {
         // Here we are mocking a couch authentication
         nock("http://test/")
@@ -92,27 +125,30 @@ describe("The nano library ", function () {
             .reply(200, {
                 ok: true
             });
-        couchdb.initialize("http://test", "tester", "pass").then(function (response) {
-            couchdb.use("test");
-            console.log("Login Response " + JSON.stringify(response));
-            nock("http://test/")
-                .head("/test/9")
-                .reply(200, {}, {
-                    etag: "99-ce54ca73ee9cfaec22610765aa6f04d5"
-                });
+        couchdb.initialize("http://test", "tester", "pass")
+            .then(function (response) {
+                couchdb.use("test");
+                console.log("Login Response " + JSON.stringify(response));
+                nock("http://test/")
+                    .head("/test/9")
+                    .reply(200, {}, {
+                        etag: "99-ce54ca73ee9cfaec22610765aa6f04d5"
+                    });
 
-            return couchdb.replace({
-                _id: "9",
-                testKey1: "updatedVal",
-                testKey3: "newVal"
+                return couchdb.replace({
+                    _id: "9",
+                    testKey1: "updatedVal",
+                    testKey3: "newVal"
+                });
+            })
+            .then(function (body) {
+                body.ok.should.equal(true);
+                done();
+            })
+            .catch(function (reason) {
+                done(JSON.stringify(reason));
+                console.log(JSON.stringify(reason) + "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             });
-        }).then(function (body) {
-            body.ok.should.equal(true);
-            done();
-        }).catch(function (reason) {
-            done(JSON.stringify(reason));
-            console.log(JSON.stringify(reason) + "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-        });
     });
     it("addAdmin should create an admin user without authenticating ", function (done) {
         nock("http://test/")
@@ -182,46 +218,46 @@ describe("The nano library ", function () {
             }, {
                 "set-cookie": "Yammo"
             });
-        couchdb.initialize("http://test", "tester", "pass").then(function (response) {
-            couchdb.use("test");
-            console.log("Login Response " + JSON.stringify(response));
-            nock("http://test/")
-                .head("/test/9")
-                .reply(200, {}, {
-                    etag: "99-ce54ca73ee9cfaec22610765aa6f04d5"
-                });
+        couchdb.initialize("http://test", "tester", "pass")
+            .then(function (response) {
+                couchdb.use("test");
+                console.log("Login Response " + JSON.stringify(response));
 
-            return couchdb.update({
-                _id: "9",
-                testKey1: "updatedVal",
-                testKey3: "newVal"
-            });
-        }).then(function (body) {
-            nock("http://test/")
-                .matchHeader("cookie", (val) => {
-                    console.log("!!!!Cookie Value " + val);
-                    return (val.search("Yammo") !== -1);
-                })
-                .post("/test")
-                .reply(200, {
-                    ok: true
+                return couchdb.update({
+                    _id: "9",
+                    testKey1: "updatedVal",
+                    testKey3: "newVal"
                 });
-            return couchdb.update({
-                _id: "9",
-                testKey1: "updatedVal",
-                testKey3: "newVal"
+            })
+            .then(function (body) {
+                nock("http://test/")
+                    .matchHeader("cookie", (val) => {
+                        console.log("!!!!Cookie Value " + val);
+                        return (val.search("Yammo") !== -1);
+                    })
+                    .post("/test")
+                    .reply(200, {
+                        ok: true
+                    });
+                return couchdb.update({
+                    _id: "9",
+                    testKey1: "updatedVal",
+                    testKey3: "newVal"
+                });
+            })
+            .then(function (body) {
+                body.ok.should.equal(true);
+                done();
+            })
+            .catch(function (reason) {
+                done(JSON.stringify(reason));
+                console.log(JSON.stringify(reason) + "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             });
-        }).then(function (body) {
-            body.ok.should.equal(true);
-            done();
-        }).catch(function (reason) {
-            done(JSON.stringify(reason));
-            console.log(JSON.stringify(reason) + "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-        });
     });
     it("We should reauthenticate when we get a 401", function (done) {
         let scope2;
         let scope3;
+        couchdb.setLogLevel("silly");
         // Here we are mocking a couch authentication
         let scope = nock("http://test/")
             .post("/_session")
@@ -266,7 +302,7 @@ describe("The nano library ", function () {
                 // Second request should use reauth cookie
                 scope3 = nock("http://test/")
                     .matchHeader("cookie", (val) => {
-                        console.log("!!!!Cookie Value " + val);
+                        console.log("!!!!Reauth Cookie Value " + val);
                         if (val) {
                             return (val.search("ReAuthCookie") !== -1);
                         } else {

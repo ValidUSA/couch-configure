@@ -49,22 +49,22 @@ module.exports = function (grunt) {
     });
     grunt.registerTask("compile", ["babel"]);
     grunt.registerTask("default", [
-        "babel",
+        "strip_code",
         "jshint",
         "jscs",
-        "strip_code"
+        "babel"
     ]);
 
     grunt.registerTask("quick", [
-        "babel",
         "jshint",
-        "jscs"
+        "jscs",
+        "babel"
     ]);
 
     grunt.registerTask("test", [
-        "babel",
         "jshint",
         "jscs",
+        "babel",
         "mochaTest"
     ]);
 };

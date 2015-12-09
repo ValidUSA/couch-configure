@@ -5,7 +5,7 @@ let logger = require("winston"),
 
 export default class couchConfigure {
     constructor() {
-        logger.level = "warn";
+        logger.level = "debug";
     }
     setLogLevel(level) {
         logger.level = level;
@@ -22,6 +22,34 @@ export default class couchConfigure {
             });
             this.db = this.nano.use(this.db.config.db);
         }
+    }
+    callBack(err, body, header, caller, ...callerParams) {
+        return new Promise((resolve, reject) => {
+            if (err) {
+                this.handle401(err)
+                    .then((response) => {
+                        // Append our callback
+                        let cb = (err, body, header) => {
+                            if (err) {
+                                reject(err);
+                            } else {
+                                resolve([err, body, header]);
+                            }
+                        };
+                        callerParams.push(cb);
+
+                        // Try calling the original method again
+                        this.db[caller].apply(this, callerParams);
+                    })
+                    .catch((reason) => {
+                        logger.error("CallBack error: " + reason);
+                        reject(reason);
+                    });
+            } else {
+                this.setHeader(header);
+                resolve([err, body, header]);
+            }
+        });
     }
     handle401(error) {
         return new Promise((resolve, reject) => {
@@ -61,6 +89,8 @@ export default class couchConfigure {
                         if (database) {
                             this.db = this.nano.use(database);
                         }
+                        logger.warn("db = " + JSON.stringify(this.db));
+                        logger.warn("nano = " + JSON.stringify(this.nano));
                     }
                     resolve([body, headers]);
                 });
@@ -86,11 +116,14 @@ export default class couchConfigure {
             }
             logger.debug("DB Get called with " + key);
             this.db.get(key, (err, body, header) => {
-                if (err) {
-                    reject(err);
-                }
-                this.setHeader(header);
-                resolve(body);
+                this.callBack(err, body, header, "get", key)
+                    .then(([err, body, header]) => {
+                        resolve(body);
+                    })
+                    .catch((reason) => {
+                        logger.error(reason);
+                        reject(reason);
+                    });
             });
         });
     }
@@ -101,14 +134,18 @@ export default class couchConfigure {
                 reject("No database configured.  Please Run initialize " + this.db);
             }
             logger.debug("DB Fetch called with " + JSON.stringify(keys));
-            this.db.fetch({
+            let qs = {
                 keys: keys
-            }, (err, body, header) => {
-                if (err) {
-                    reject(err);
-                }
-                this.setHeader(header);
-                resolve(body);
+            };
+            this.db.fetch(qs, (err, body, header) => {
+                this.callBack(err, body, header, "fetch", qs)
+                    .then(([err, body, header]) => {
+                        resolve(body);
+                    })
+                    .catch((reason) => {
+                        logger.error(reason);
+                        reject(reason);
+                    });
             });
         });
     }
@@ -117,15 +154,15 @@ export default class couchConfigure {
             if (!this.db) {
                 reject("No database configured.  Please Run initialize " + this.db);
             }
-            this.db.head(key, (err, _, headers) => {
-                if (err) {
-                    reject(err);
-                }
-                if (headers) {
-                    this.setHeader(headers);
-                    logger.debug("Got Headers: " + JSON.stringify(headers));
-                    resolve(headers);
-                }
+            this.db.head(key, (err, _, header) => {
+                this.callBack(err, _, header, "head", key)
+                    .then(([err, _, header]) => {
+                        resolve(header);
+                    })
+                    .catch((reason) => {
+                        logger.error(reason);
+                        reject(reason);
+                    });
             });
         });
     }
@@ -135,11 +172,14 @@ export default class couchConfigure {
                 reject("No database configured.  Please Run initialize " + this.db);
             }
             this.db.insert(doc, key, (err, body, header) => {
-                if (err) {
-                    reject(err);
-                }
-                this.setHeader(header);
-                resolve(body);
+                this.callBack(err, body, header, "insert", doc, key)
+                    .then(([err, body, header]) => {
+                        resolve(body);
+                    })
+                    .catch((reason) => {
+                        logger.error(reason);
+                        reject(reason);
+                    });
             });
         });
     }
@@ -150,23 +190,14 @@ export default class couchConfigure {
             }
             logger.debug("Sending PUT request" + JSON.stringify(doc));
             this.db.insert(doc, (err, body, header) => {
-                if (err) {
-                    this.handle401(err)
-                    .then((response)=> {
-                        this.db.insert(doc, (err, body, header) => {
-                            if (err) {
-                                reject(err);
-                            }
-                            resolve(body);
-                            return;
-                        });
-                    }).catch((reason)=> {
-                        reject(err);
+                logger.info("Calling callback : context of self: " + JSON.stringify(this));
+                this.callBack(err, body, header, "insert", doc)
+                    .then(([err, body, header]) => {
+                        resolve(body);
+                    }).catch((reason) => {
+                        logger.error(reason);
+                        reject(reason);
                     });
-                } else {
-                    this.setHeader(header);
-                    resolve(body);
-                }
             });
         });
     }
@@ -178,25 +209,23 @@ export default class couchConfigure {
             if (!(newDoc && newDoc._id)) {
                 reject("Merge: Document and Key cannot be undefined");
             }
-            this.db.get(newDoc._id, (err, body, header) => {
-                if (err) {
-                    reject("merge error: " + err);
-                }
-                this.setHeader(header);
-                logger.debug("Got existing data " + JSON.stringify(body));
-                let doc = _.assign(body, newDoc);
-                logger.debug("Merged doc: " + JSON.stringify(doc));
-                this.db.insert(doc, (err, body, header) => {
-                    if (err) {
-                        reject(err);
-                    }
-                    this.setHeader(header);
+            this.get(newDoc._id)
+                .then((body) => {
+                    logger.debug("Got existing data " + JSON.stringify(body));
+                    let doc = _.assign(body, newDoc);
+                    logger.debug("Merged doc: " + JSON.stringify(doc));
+                    return this.insert(doc);
+                })
+                .then((body) => {
                     if (body) {
                         logger.debug("Got Body" + JSON.stringify(body));
                         resolve(body);
                     }
+                })
+                .catch((reason) => {
+                    logger.error(reason);
+                    reject(reason);
                 });
-            });
         });
     }
     delete(key) {
@@ -208,27 +237,24 @@ export default class couchConfigure {
                 reject("Delete: Key cannot be undefined");
             }
             logger.debug("Doc Key " + key);
-            this.db.get(key, (err, body, header) => {
-                if (err) {
-                    reject("Delete error: " + err);
-                }
-                this.setHeader(header);
-                logger.debug("Found Doc " + JSON.stringify(body));
-                let doc = _.assign(body, {
-                    _deleted: true
-                });
-                logger.debug("Deleted doc: " + JSON.stringify(doc));
-                this.db.insert(doc, (err, body, header) => {
-                    if (err) {
-                        reject(err);
-                    }
-                    this.setHeader(header);
+            this.get(key)
+                .then((body) => {
+                    let doc = _.assign(body, {
+                        _deleted: true
+                    });
+                    logger.debug("Deleted doc: " + JSON.stringify(doc));
+                    return this.insert(doc);
+                })
+                .then((body) => {
                     if (body) {
                         logger.debug("Got Body" + JSON.stringify(body));
                         resolve(body);
                     }
+                })
+                .catch((reason) => {
+                    logger.error(reason);
+                    reject(reason);
                 });
-            });
         });
     }
     replace(doc) {
@@ -284,7 +310,7 @@ export default class couchConfigure {
             if (!this.db) {
                 reject("No database configured.  Please Run initialize " + this.db);
             }
-            this.db.insert(securityDoc, "_security").then((body) => {
+            this.insert(securityDoc, "_security").then((body) => {
                 logger.debug(JSON.stringify(body));
             }).catch((reason) => {
                 logger.debug(reason);
@@ -292,12 +318,13 @@ export default class couchConfigure {
         });
     }
     // Pass in design doc name, view name and an array of keys
-    view(designName, viewName, keys) {
+    view(designName, viewName, qs) {
         return new Promise((resolve, reject) => {
             if (!this.db) {
                 reject("No database configured.  Please Run initialize " + this.db);
             }
-            this.db.view(designName, viewName, keys, (err, body, header) => {
+            logger.debug("view Query Strings" + JSON.stringify(qs));
+            this.db.view(designName, viewName, qs, (err, body, header) => {
                 if (err) {
                     reject(err);
                 }
