@@ -33,7 +33,6 @@
         "beforeAlternate": true
     },
     "requireSpacesInFunction": {
-        "beforeOpeningRoundBrace": true,
         "beforeOpeningCurlyBrace": true
     },
     "requireSpaceBeforeKeywords": ["else", "while", "until", "catch"],

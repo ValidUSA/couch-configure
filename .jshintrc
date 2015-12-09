@@ -4,6 +4,7 @@
     "eqeqeq": true,
     "es3": false,
     "es5": false,
+    "esnext": true,
     "forin": true,
     "freeze": true,
     "funcscope": true,
