@@ -13,7 +13,7 @@ var chai = require("chai"),
     couchdb = new Couch(),
     nock = require("nock");
 
-describe("The nano library ", function () {
+describe("The couch-configure library ", function () {
     beforeEach(function () {});
     afterEach(function () {});
 
@@ -26,7 +26,7 @@ describe("The nano library ", function () {
             done();
         });
     });
-    it("We should update a doc", function (done) {
+    it("should update a doc", function (done) {
         let scope = nock("http://test/")
             .post("/test")
             .reply(200, {
@@ -59,6 +59,88 @@ describe("The nano library ", function () {
                 console.log(JSON.stringify(reason) + "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             });
     });
+    it("should get an attachment", function (done) {
+        let scope = nock("http://test/")
+            .get("/test/test1/testAtt.jpg")
+            .reply(200, new Buffer("test"))
+            .post("/_session")
+            .reply(200, {
+                ok: true,
+                name: "tester",
+                roles: ["nock", "is", "cool"]
+            }, {
+                // Third argument is the response header
+                "set-cookie": "Yummo"
+            });
+        couchdb.initialize("http://test", "tester", "pass", "test")
+            .then((response) => {
+                return couchdb.getAtt("test1", "testAtt.jpg");
+            })
+            .then((body) => {
+                body.toString("ascii").should.equal("test");
+
+                scope.done();
+                done();
+            })
+            .catch((reason) => {
+                done(JSON.stringify(reason));
+                console.log(JSON.stringify(reason) + "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            });
+    });
+    it("We should hit a view", function (done) {
+        let scope = nock("http://test/")
+            .get("/test/_design/test/_view/testView")
+            .query(true)
+            .reply(200, {
+                rows: [{
+                    key: null,
+                    value: 2
+                }]
+            })
+            .post("/test/_design/test/_view/testView")
+            .reply(200, {
+                rows: [{
+                    key: null,
+                    value: 2
+                }]
+            })
+            .post("/_session")
+            .reply(200, {
+                ok: true,
+                name: "tester",
+                roles: ["nock", "is", "cool"]
+            }, {
+                // Third argument is the response header
+                "set-cookie": "Yummo"
+            });
+        couchdb.initialize("http://test", "tester", "pass", "test")
+            .then((response) => {
+                return couchdb.view("test", "testView", {
+                    key: ["testKey", "testkey2"],
+                    limit: 2,
+                    include_docs: true,
+                    reduce: false
+                });
+            })
+            .then((viewResponse) => {
+                viewResponse.rows.length.should.equal(1);
+                viewResponse.rows[0].value.should.equal(2);
+
+                return couchdb.view("test", "testView", {
+                    keys: ["77777777777777777", "9999"]
+                });
+            })
+            .then((viewResponse) => {
+                viewResponse.rows.length.should.equal(1);
+                scope.done();
+                done();
+            })
+            .catch((reason) => {
+                done(JSON.stringify(reason));
+                console.log(JSON.stringify(reason) + "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            });
+    });
+
     it("merge should overwrite data", function (done) {
         // Here we are mocking a couch authentication
         nock("http://test/")

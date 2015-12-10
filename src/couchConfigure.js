@@ -5,7 +5,7 @@ let logger = require("winston"),
 
 export default class couchConfigure {
     constructor() {
-        logger.level = "debug";
+        logger.level = "warn";
     }
     setLogLevel(level) {
         logger.level = level;
@@ -36,10 +36,18 @@ export default class couchConfigure {
                                 resolve([err, body, header]);
                             }
                         };
+                        // rebuild the method to call it again from the string
+                        // I could pass the method in right?  But the context of this
+                        // changes and I want to use the new this with the real cookie
                         callerParams.push(cb);
+                        let properties = caller.split(".");
+                        let walker = this.db;
+                        properties.forEach((prop) => {
+                            walker = walker[prop];
+                        });
 
                         // Try calling the original method again
-                        this.db[caller].apply(this, callerParams);
+                        walker.apply(this, callerParams);
                     })
                     .catch((reason) => {
                         logger.error("CallBack error: " + reason);
@@ -56,7 +64,7 @@ export default class couchConfigure {
             if (error.statusCode === 401) {
                 this.initialize(this.nano.config.url, this.user, this.pass, this.database)
                     .then((response) => {
-                        logger.warn("Reauthentication Suceeded");
+                        logger.debug("Reauthentication Suceeded");
                         resolve(response);
                     })
                     .catch((reason) => {
@@ -89,8 +97,8 @@ export default class couchConfigure {
                         if (database) {
                             this.db = this.nano.use(database);
                         }
-                        logger.warn("db = " + JSON.stringify(this.db));
-                        logger.warn("nano = " + JSON.stringify(this.nano));
+                        logger.debug("db = " + JSON.stringify(this.db));
+                        logger.debug("nano = " + JSON.stringify(this.nano));
                     }
                     resolve([body, headers]);
                 });
@@ -325,11 +333,14 @@ export default class couchConfigure {
             }
             logger.debug("view Query Strings" + JSON.stringify(qs));
             this.db.view(designName, viewName, qs, (err, body, header) => {
-                if (err) {
-                    reject(err);
-                }
-                this.setHeader(header);
-                resolve(body);
+                this.callBack(err, body, header, "view", designName, viewName, qs)
+                    .then(([err, body, header]) => {
+                        resolve(body);
+                    })
+                    .catch((reason) => {
+                        logger.error(reason);
+                        reject(reason);
+                    });
             });
         });
     }
@@ -337,19 +348,25 @@ export default class couchConfigure {
         return new Promise((resolve, reject) => {
             if (this.nano) {
                 this.nano.request(opts, (err, body, header) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(body);
-                    }
+                    this.callBack(err, body, header, "request", opts)
+                        .then(([err, body, header]) => {
+                            resolve(body);
+                        })
+                        .catch((reason) => {
+                            logger.error(reason);
+                            reject(reason);
+                        });
                 });
             } else {
                 nano(couchUrl).request(opts, (err, body, header) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(body);
-                    }
+                    this.callBack(err, body, header, "request", opts)
+                        .then(([err, body, header]) => {
+                            resolve(body);
+                        })
+                        .catch((reason) => {
+                            logger.error(reason);
+                            reject(reason);
+                        });
                 });
             }
         });
@@ -360,12 +377,14 @@ export default class couchConfigure {
                 reject("No database configured.  Please Run initialize " + this.db);
             }
             this.db.attachment.get(docName, attName, qs, (err, body, header) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    this.setHeader(header);
-                    resolve(body);
-                }
+                this.callBack(err, body, header, "attachment.get", docName, attName, qs)
+                    .then(([err, body, header]) => {
+                        resolve(body);
+                    })
+                    .catch((reason) => {
+                        logger.error(reason);
+                        reject(reason);
+                    });
             });
         });
     }
