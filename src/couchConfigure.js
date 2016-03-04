@@ -106,8 +106,8 @@ export default class couchConfigure {
                 this.nano = nano(couchURL);
                 if (database) {
                     this.db = this.nano.use(database);
-                    resolve(true);
                 }
+                resolve(true);
             }
         });
     }
