@@ -4,7 +4,10 @@ let logger = require("winston"),
     _ = require("lodash");
 
 export default class couchConfigure {
-    constructor() {
+    constructor(url) {
+        if (url) {
+            this.nano = nano(url);
+        }
         logger.level = "warn";
     }
     setLogLevel(level) {
